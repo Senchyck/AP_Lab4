@@ -1,0 +1,49 @@
+package converter;
+
+import java.util.List;
+import java.util.function.Predicate;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
+
+import dao.IngredientDAO;
+import entity.Ingredient;
+
+@Component
+public class StringIdToIngredientConverter implements Converter<String, Ingredient> {
+
+    @Autowired
+    IngredientDAO ingredientDAO;
+
+    private List<Ingredient> ingredients;
+
+    @PostConstruct
+    public void loadIngredients () {
+        this.ingredients = ingredientDAO.findAll();
+    }
+
+    public void setIngredients(List<Ingredient> ingredients) {
+        this.ingredients = ingredients;
+    }
+
+    @Override
+    public Ingredient convert(String ingredientId) {
+
+        int ingredientIdAsInt = Integer.parseInt(ingredientId);
+        Ingredient ingredient = getIngredientBy(ingr -> ingr.getId() == ingredientIdAsInt);
+
+        return ingredient;
+    }
+
+    private Ingredient getIngredientBy(Predicate<Ingredient> isItRequiredIngredient) {
+
+        for (Ingredient ingredient : this.ingredients) {
+            if (isItRequiredIngredient.test(ingredient)) return ingredient;
+        }
+
+        return null;
+    }
+}
